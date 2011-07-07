@@ -67,7 +67,7 @@ def generate_export_function(spec, s):
             s.write('class_<vector<{0}> >("{1}_{2}")'.format(qualify(f.base_type),
                                                                msg, f.name))
             with Indent(s, 2):
-                s.write('.def(vector_indexing_suite<vector<0> > ())')
+                s.write('.def(vector_indexing_suite<vector<{0}> > ())'.format(qualify(f.base_type)))
                 s.write(';')
     s.write("}\n")
 
@@ -104,9 +104,25 @@ def generate_file(pkg, msg, s=None):
 ############################################################
 # Helpers
 ############################################################
+
+MSG_TYPE_TO_CPP = {'byte': 'int8_t', 'char': 'uint8_t',
+                   'bool': 'uint8_t',
+                   'uint8': 'uint8_t', 'int8': 'int8_t', 
+                   'uint16': 'uint16_t', 'int16': 'int16_t', 
+                   'uint32': 'uint32_t', 'int32': 'int32_t',
+                   'uint64': 'uint64_t', 'int64': 'int64_t',
+                   'float32': 'float',
+                   'float64': 'double',
+                   'string': 'std::string',
+                   'time': 'ros::Time',
+                   'duration': 'ros::Duration'}
+
     
 def qualify(name):
-    return name.replace('/', '::')
+    if '/' in name:
+        return name.replace('/', '::')
+    else:
+        return MSG_TYPE_TO_CPP[name]
     
 
 ############################################################
