@@ -38,6 +38,7 @@ from cStringIO import StringIO
 from roslib import packages
 from roslib import msgs
 from roslib import rospack
+import os
 
 ############################################################
 # Main functions
@@ -99,6 +100,49 @@ def generate_file(pkg, msg, s=None):
     s.write("} // namespace")
 
     return s.getvalue()
+
+
+def generate_package_file(pkg, s=None):
+    "Generate the top level file for the given package with forward declarations for individual messages"
+    if s is None:
+        s = IndentedWriter()
+
+    # Header
+    s.write("#include <boost/python.hpp>\n")
+    s.write("namespace {0}".format(pkg))
+    s.write("{\n")
+
+    # Forward declarations
+    messages = msgs.list_msg_types(pkg, False)
+    for m in messages:
+        s.write("void export{0}();".format(m));
+
+    # Boost python wrappers
+    s.write("\n")
+    s.write("BOOST_PYTHON_MODULE({0})".format(pkg))
+    s.write("{")
+    with Indent(s, 2):
+        for m in messages:
+            s.write("export{0}();".format(m))
+    s.write("}\n")
+
+    s.write("} // namespace")
+    return s.getvalue()
+
+def write_bindings(pkg, target_dir):
+    "Generate and write all bindings"
+    top_level_file = os.path.join(target_dir, pkg+'.cpp')
+    print("Writing " + top_level_file)
+    with open(top_level_file, 'w') as f:
+        f.write(generate_package_file(pkg))
+    for m in msgs.list_msg_types(pkg, False):
+        outfile = os.path.join(target_dir, "{0}_{1}.cpp".format(pkg, m))
+        print("Writing " + outfile)
+        with open(outfile, 'w') as f:
+            f.write(generate_file(pkg, m))
+                  
+    
+    
     
                 
 ############################################################
