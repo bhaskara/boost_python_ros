@@ -1,0 +1,11 @@
+<stack>
+  <description brief="boost_python_ros">
+    See package info
+  </description>
+  <author>Bhaskara Marthi</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://pr.willowgarage.com/wiki/boost_python_ros</url>
+  <depend stack="ros"/>
+  <depend stack="ros_comm"/>
+</stack>

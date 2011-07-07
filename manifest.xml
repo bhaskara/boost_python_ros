@@ -1,0 +1,16 @@
+<package>
+  <description brief="boost_python_ros">
+    Temporary package for holding Boost python bindings for ROS message types, to avoid circular dependencies elsewhere.
+  </description>
+  <author>Bhaskara Marthi</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/boost_python_ros</url>
+  <depend package="geometry_msgs"/>
+  <depend package="std_msgs"/>
+  <depend package="nav_msgs"/>
+  <depend package="sensor_msgs"/>
+
+</package>
+
+
