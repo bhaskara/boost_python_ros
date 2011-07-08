@@ -40,6 +40,7 @@ from roslib import msgs
 from roslib import rospack
 import os
 import re
+import itertools as it
 
 ############################################################
 # Main functions
@@ -54,7 +55,8 @@ def generate_export_function(spec, s):
     s.write("{")
     with Indent(s, 2):
         s.write("using {0}::{1};".format(spec.package, msg))
-        s.write('class_<{0}, shared_ptr<{0}> >("{0}", init<>())'.format(msg))
+        s.write('class_<{0}, shared_ptr<{0}> >("{0}", "{1}")'.\
+                format(msg, class_docstring(spec)))
 
         array_fields = []
 
@@ -239,7 +241,15 @@ def get_msg_spec(pkg, msg):
     path = rospack.rospackexec(['find', pkg])
     return msgs.load_from_file("{0}/msg/{1}.msg".format(path, msg), pkg)[1]
 
-    
+def class_docstring(spec):
+    def is_doc(line):
+        return line.startswith('#')
+    non_blank_lines = (l.strip() for l in spec.text.split('\n')
+                       if re.match('.*\S', l))
+    init_doc_lines = it.takewhile(is_doc, non_blank_lines)
+    processed_lines = (l.replace('#', '').replace('"', '\\"').strip()
+                       for l in init_doc_lines)
+    return '\\n'.join(processed_lines)
     
 
 ############################################################
