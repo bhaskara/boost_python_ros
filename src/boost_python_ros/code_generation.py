@@ -78,8 +78,7 @@ def generate_file(pkg, msg, s=None):
     
     if s is None:
         s = IndentedWriter()
-    path = rospack.rospackexec(['find', pkg])
-    (_, spec) = msgs.load_from_file("{0}/msg/{1}.msg".format(path, msg), pkg)
+    spec = get_msg_spec(pkg, msg)
 
     s.write("#include <{0}/{1}.h>".format(pkg, msg))
     s.write("#include <boost/python.hpp>")
@@ -129,6 +128,52 @@ def generate_package_file(pkg, s=None):
     s.write("} // namespace")
     return s.getvalue()
 
+def generate_rospy_conversion(pkg, msg, s=None):
+    if s is None:
+        s = IndentedWriter()
+
+    spec = get_msg_spec(pkg, msg)
+    s.write("def {0}_to_ros(x):".format(msg))
+    with Indent(s, 4):
+        s.write("m = {0}.msg.{1}()".format(pkg, msg))
+        for f in spec.parsed_fields():
+            if f.is_builtin:
+                conv = "m.{0} = x.{0}"
+            elif f.is_array:
+                conv = "m.{0} = [y.to_ros() for y in x.{0}]"
+            else:
+                conv = "m.{0} = x.{0}.to_ros()"
+            s.write(conv.format(f.name))
+        s.write("return m\n")
+        
+    s.write("{0}.to_ros = {0}_to_ros\n".format(msg))
+
+    s.write("def {0}_to_boost(m):".format(msg))
+    with Indent(s, 4):
+        s.write("x = {0}()".format(msg))
+        for f in spec.parsed_fields():
+            if f.is_builtin:
+                conv = "x.{0} = m.{0}"
+            elif f.is_array:
+                conv = "x.{0} = [y.to_boost() for y in m.{0}]"
+            else:
+                conv = "x.{0} = m.{0}.to_boost()"
+            s.write(conv.format(f.name))
+        s.write("return x\n")
+
+    s.write("{1}.msg.{0}.to_boost = {0}_to_boost\n".format(msg, pkg))
+    
+    return s.getvalue()
+
+def write_rospy_conversions(pkg, target_dir):
+    "Generate all rospy conversions"
+    os.makedirs(target_dir)
+    outfile = os.path.join(target_dir, pkg+'_boost_conversions.py')
+    with open(outfile, 'w') as f:
+        for m in msgs.list_msg_types(pkg, False):
+            f.write(generate_rospy_conversion(pkg, m))
+        
+
 def write_bindings(pkg, target_dir):
     "Generate and write all bindings"
     top_level_file = os.path.join(target_dir, pkg+'.cpp')
@@ -167,6 +212,12 @@ def qualify(name):
         return name.replace('/', '::')
     else:
         return MSG_TYPE_TO_CPP[name]
+
+def get_msg_spec(pkg, msg):
+    path = rospack.rospackexec(['find', pkg])
+    return msgs.load_from_file("{0}/msg/{1}.msg".format(path, msg), pkg)[1]
+
+    
     
 
 ############################################################
