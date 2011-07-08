@@ -167,7 +167,6 @@ def generate_rospy_conversion(pkg, msg, s=None):
 
 def write_rospy_conversions(pkg, target_dir):
     "Generate all rospy conversions"
-    os.makedirs(target_dir)
     outfile = os.path.join(target_dir, pkg+'_boost_conversions.py')
     with open(outfile, 'w') as f:
         for m in msgs.list_msg_types(pkg, False):
@@ -177,12 +176,10 @@ def write_rospy_conversions(pkg, target_dir):
 def write_bindings(pkg, target_dir):
     "Generate and write all bindings"
     top_level_file = os.path.join(target_dir, pkg+'.cpp')
-    print("Writing " + top_level_file)
     with open(top_level_file, 'w') as f:
         f.write(generate_package_file(pkg))
     for m in msgs.list_msg_types(pkg, False):
         outfile = os.path.join(target_dir, "{0}_{1}.cpp".format(pkg, m))
-        print("Writing " + outfile)
         with open(outfile, 'w') as f:
             f.write(generate_file(pkg, m))
                   
@@ -276,5 +273,6 @@ class Indent():
 
     def __exit__(self, type, val, traceback):
         self.writer.dec_indent(self.inc)
+
 
 
