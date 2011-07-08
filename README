@@ -1,0 +1,1 @@
+Contains scripts for generating Boost Python bindings for ROS message types.  Uses the roslib libraries for parsing the ROS message IDL.
