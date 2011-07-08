@@ -39,6 +39,7 @@ from roslib import packages
 from roslib import msgs
 from roslib import rospack
 import os
+import re
 
 ############################################################
 # Main functions
@@ -73,6 +74,17 @@ def generate_export_function(spec, s):
     s.write("}\n")
 
 
+def generate_equality_forward_declarations(spec, s):
+    for f in spec.parsed_fields():
+        if f.is_array and not f.is_builtin:
+            m = re.match('(\w+)/', f.base_type)
+            pkg = m.group(1)
+            s.write("namespace {0}".format(pkg))
+            s.write("{\n")
+            s.write("bool operator== (const {0}& m1, const {0}& m2);\n".\
+                    format(qualify(f.base_type)))
+            s.write("}\n")
+
 def generate_file(pkg, msg, s=None):
     "Generate the definition file for a single message"
     
@@ -85,6 +97,9 @@ def generate_file(pkg, msg, s=None):
     s.write("#include <boost/python/suite/indexing/vector_indexing_suite.hpp>")
     s.write("\n")
 
+    generate_equality_forward_declarations(spec, s)
+
+
     s.write("namespace {0}".format(pkg))
     s.write("{")
     s.write("\n")
@@ -93,6 +108,16 @@ def generate_file(pkg, msg, s=None):
     s.write("using boost::shared_ptr;")
     s.write("using std::vector;")
     s.write("\n")
+
+    
+    s.write("// Dummy equality check to avoid compilation error for vector_indexing_suite")
+    s.write("bool operator== (const {0}& m1, const {0}& m2)".\
+            format(msg))
+    s.write("{")
+    with Indent(s, 2):
+        s.write("return false;")
+    s.write("}\n")
+
 
     generate_export_function(spec, s)
 
