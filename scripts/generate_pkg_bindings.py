@@ -18,8 +18,8 @@ if __name__ == "__main__":
         sys.exit()
 
     pkg = sys.argv[1]
-    cpp_target_dir = os.path.join(base_dir, 'src')
-    py_target_dir = os.path.join(base_dir, 'src', pkg)
+    cpp_target_dir = base_dir
+    py_target_dir = os.path.join(base_dir, pkg)
     if not os.path.exists(py_target_dir):
         os.makedirs(py_target_dir)
     
