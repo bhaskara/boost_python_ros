@@ -11,7 +11,9 @@
   <depend package="nav_msgs"/>
   <depend package="sensor_msgs"/>
   <depend package="roslib"/>
-
+  <export>
+      <python path="${prefix}/src:${prefix}/munged"/>
+  </export>
 </package>
 
 
