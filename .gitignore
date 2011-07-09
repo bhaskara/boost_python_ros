@@ -1,3 +1,7 @@
-
 /src/*.cpp
 /src/nav_msgs
+munged
+build
+*.pyc
+lib
+
