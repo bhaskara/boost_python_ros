@@ -26,6 +26,8 @@ file(WRITE ${GEN_PYTHON_ROOT}/__init__.py "\n")
 
 add_definitions("-Wl,--no-undefined ")
 
+
+# We need a special library for the ros time types since these are ROS builtins that don't have .msg files
 rosbuild_add_library(rostime_boost_python src/rostime_exports.cpp)
 set_target_properties(rostime_boost_python
   PROPERTIES
@@ -37,6 +39,7 @@ target_link_libraries(rostime_boost_python
   )
 
 
+# This macro generates the boost python bindings for the messages in a given ros package
 macro(bpmodule NAME)
     include_directories(
       ${PYTHON_INCLUDE_PATH}
@@ -44,7 +47,6 @@ macro(bpmodule NAME)
     )
 
     add_library(${NAME}_cpp SHARED ${ARGN})
-    message(STATUS "The libraries for ${NAME} are ${${PROJECT_NAME}_LIBRARIES}")
     target_link_libraries(${NAME}_cpp ${${PROJECT_NAME}_LIBRARIES})
     
     
@@ -62,6 +64,7 @@ macro(bpmodule NAME)
     )
 endmacro()
 
+# Top level macro generates bindings as well as python conversion wrapper
 macro(message_gen_wrap ROS_PACKAGE)
     set(GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/${ROS_PACKAGE}) #this is for generated cpp files.
 
