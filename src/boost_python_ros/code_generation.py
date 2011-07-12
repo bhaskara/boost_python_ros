@@ -192,10 +192,17 @@ def generate_rospy_conversion(pkg, msg, s=None):
     
     return s.getvalue()
 
-def write_rospy_conversions(pkg, target_dir):
-    "Generate all rospy conversions"
-    outfile = os.path.join(target_dir, pkg+'_boost_conversions.py')
+def write_rospy_conversions(pkg, target_dir, current_pkg):
+    """
+    Generate all rospy conversions.
+    @param pkg: We'll generate conversion functions for all messages defined in this ros package.
+    @param current_pkg: The generated functions are being put into this ros package.
+    """
+    outfile = os.path.join(target_dir, pkg+'_boost.py')
     with open(outfile, 'w') as f:
+        f.write("import roslib; roslib.load_manifest('{0}')\n".format(current_pkg))
+        f.write("import {0}.msg\n".format(pkg))
+        f.write("from ..bindings.{1} import *\n\n".format(current_pkg, pkg))
         for m in msgs.list_msg_types(pkg, False):
             f.write(generate_rospy_conversion(pkg, m))
         

@@ -17,15 +17,16 @@ if __name__ == "__main__":
                        help='Where to place the generated cpp files.')
     parser.add_argument('--py_target_dir',metavar='PY_TARGET_DIR', dest='py_target_dir', type=str, default= os.getcwd(),
                        help='Where to place the ROS_PACKAGE python converter files.')
+    parser.add_argument('--current_package',metavar='CURRENT_ROS_PACKAGE', dest='current_package', type=str)
     args = parser.parse_args()
    
     pkg = args.package
     cpp_target_dir = args.cpp_target_dir
-    py_target_dir = os.path.join(args.py_target_dir, pkg)
+    py_target_dir = args.py_target_dir #os.path.join(args.py_target_dir, pkg)
     if not os.path.exists(py_target_dir):
         os.makedirs(py_target_dir)
     if not os.path.exists(cpp_target_dir):
         os.makedirs(cpp_target_dir)
     cg.write_bindings(pkg, cpp_target_dir)
-    cg.write_rospy_conversions(pkg, py_target_dir)
+    cg.write_rospy_conversions(pkg, py_target_dir, args.current_package)
     
