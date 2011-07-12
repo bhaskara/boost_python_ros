@@ -82,10 +82,15 @@ def generate_equality_forward_declarations(spec, s):
             m = re.match('(\w+)/', f.base_type)
             pkg = m.group(1)
             s.write("namespace {0}".format(pkg))
-            s.write("{\n")
-            s.write("bool operator== (const {0}& m1, const {0}& m2);\n".\
+            s.write("\n{")
+            s.write("inline bool operator== (const {0}& m1, const {0}& m2)".
                     format(qualify(f.base_type)))
-            s.write("}\n")
+            s.write("{\n  return false;\n}\n\n} // namespace")
+            #s.write("namespace {0}".format(pkg))
+            #s.write("{\n")
+            #s.write("bool operator== (const {0}& m1, const {0}& m2);\n".\
+            #        format(qualify(f.base_type)))
+            #s.write("}\n")
 
 def generate_file(pkg, msg, s=None):
     "Generate the definition file for a single message"
@@ -145,7 +150,7 @@ def generate_package_file(pkg, s=None):
 
     # Boost python wrappers
     s.write("\n")
-    s.write("BOOST_PYTHON_MODULE({0})".format(pkg))
+    s.write("BOOST_PYTHON_MODULE({0}_cpp)".format(pkg))
     s.write("{")
     with Indent(s, 2):
         for m in messages:
@@ -164,33 +169,61 @@ def generate_rospy_conversion(pkg, msg, s=None):
     with Indent(s, 4):
         s.write("m = {0}.msg.{1}()".format(pkg, msg))
         for f in spec.parsed_fields():
-            if f.is_builtin:
-                conv = "m.{0} = x.{0}"
-            elif f.is_array:
-                conv = "m.{0} = [y.to_ros() for y in x.{0}]"
+            if f.type in ['time', 'duration']:
+                 s.write("m.{0}.secs = x.{0}.sec".format(f.name))
+                 s.write("m.{0}.nsecs = x.{0}.nsec".format(f.name))
             else:
-                conv = "m.{0} = x.{0}.to_ros()"
-            s.write(conv.format(f.name))
+                if f.is_builtin:
+                    conv = "m.{0} = x.{0}"
+                elif f.is_array:
+                    conv = "m.{0} = [y.to_ros() for y in x.{0}]"
+                else:
+                    conv = "m.{0} = x.{0}.to_ros()"
+                s.write(conv.format(f.name))
         s.write("return m\n")
         
-    s.write("{0}.to_ros = {0}_to_ros\n".format(msg))
+    s.write("cpp.{0}.to_ros = {0}_to_ros\n".format(msg))
 
     s.write("def {0}_to_boost(m):".format(msg))
     with Indent(s, 4):
-        s.write("x = {0}()".format(msg))
+        s.write("x = cpp.{0}()".format(msg))
         for f in spec.parsed_fields():
-            if f.is_builtin:
-                conv = "x.{0} = m.{0}"
-            elif f.is_array:
-                conv = "x.{0} = [y.to_boost() for y in m.{0}]"
+            if f.type in ['time', 'duration']:
+                s.write("x.{0}.sec = m.{0}.secs".format(f.name))
+                s.write("x.{0}.nsec = m.{0}.nsecs".format(f.name))
             else:
-                conv = "x.{0} = m.{0}.to_boost()"
-            s.write(conv.format(f.name))
+                if f.is_builtin:
+                    conv = "x.{0} = m.{0}"
+                elif f.is_array:
+                    conv = "x.{0}[:] = [y.to_boost() for y in m.{0}]"
+                else:
+                    conv = "x.{0} = m.{0}.to_boost()"
+                s.write(conv.format(f.name))
         s.write("return x\n")
 
     s.write("{1}.msg.{0}.to_boost = {0}_to_boost\n".format(msg, pkg))
     
     return s.getvalue()
+
+
+def generate_python_imports(pkg):
+    pkgs = set()
+    for m in msgs.list_msg_types(pkg, False):
+        spec = get_msg_spec(pkg, m)
+        for f in spec.parsed_fields():
+            if f.is_header:
+                pkgs.add('std_msgs')
+            else:
+                match = re.match('(\w+)/', f.base_type)
+                if match and match.group(1)!=pkg:
+                    pkgs.add(match.group(1))
+    return '\n'.join("import {0}_boost".format(p) for p in pkgs)
+                
+            
+            
+        
+            
+    
 
 def write_rospy_conversions(pkg, target_dir, current_pkg):
     """
@@ -201,8 +234,12 @@ def write_rospy_conversions(pkg, target_dir, current_pkg):
     outfile = os.path.join(target_dir, pkg+'_boost.py')
     with open(outfile, 'w') as f:
         f.write("import roslib; roslib.load_manifest('{0}')\n".format(current_pkg))
-        f.write("import {0}.msg\n".format(pkg))
-        f.write("from ..bindings.{1} import *\n\n".format(current_pkg, pkg))
+        f.write("import rostime_boost_python\n")
+        f.write(generate_python_imports(pkg))
+        f.write("\nimport {0}.msg\n".format(pkg))
+        f.write("import {0}_cpp as cpp\n".format(pkg))
+
+
         for m in msgs.list_msg_types(pkg, False):
             f.write(generate_rospy_conversion(pkg, m))
         

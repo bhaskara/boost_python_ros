@@ -12,7 +12,7 @@
   <depend package="sensor_msgs"/>
   <depend package="roslib"/>
   <export>
-      <python path="${prefix}/src:${prefix}/munged"/>
+    <python path="${prefix}/src:${prefix}/munged:${prefix}/lib"/>
   </export>
 </package>
 
