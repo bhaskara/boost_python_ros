@@ -13,10 +13,8 @@ In [1]: roslib.load_manifest('boost_python_ros')
 In [2]: import geometry_msgs_boost as gmb                                                                                                                            
 ~/dev/world_model/boost_python_ros/munged/std_msgs_boost.py:5: RuntimeWarning: to-Python converter for std::vector<signed char, std::allocator<signed char> > already regis
 tered; second conversion method ignored.                                                                                                                                               
-  import std_msgs_cpp as cpp
 ~/dev/world_model/boost_python_ros/munged/geometry_msgs_boost.py:5: RuntimeWarning: to-Python converter for std::vector<double, std::allocator<double> > already registered
 ; second conversion method ignored.                                                                                                                                                    
-  import geometry_msgs_cpp as cpp
 
 In [3]: p = gmb.cpp.Pose()
 
