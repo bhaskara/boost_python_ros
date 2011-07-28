@@ -1,1 +1,52 @@
-Contains scripts for generating Boost Python bindings for ROS message types.  Uses the roslib libraries for parsing the ROS message IDL.
+Contains scripts for generating Boost Python bindings for ROS message types.  Uses the roslib libraries for parsing the ROS message IDL.  It does two things:
+1. Defines CMake macros for exporting any ROS package's roscpp message definitions into Boost Python.
+2. Calls those macros for a few specific ROS packages: geometry_msgs, sensor_msgs, nav_msgs.
+
+Example usage of the exported messages from Python (note rosh is basically an Ipython shell with ROS-related helper functions):
+
+$ rosh
+
+In [1]: roslib.load_manifest('boost_python_ros')
+
+In [2]: import boost_python_ros_bp.bindings.geometry_msgs as gmb
+-i:1: RuntimeWarning: to-Python converter for std::vector<double, std::allocator<double> > already registered; second conversion method ignored.
+
+In [3]: p = gmb.Pose()
+
+In [4]: p
+Out[4]: <boost_python_ros_bp.bindings.geometry_msgs.Pose object at 0x9e56b1c>
+
+In [5]: p.position.x = 42
+
+In [6]: p.orientation.w = 24
+
+In [7]: import boost_python_ros_bp.conversions.geometry_msgs_boost as gmc
+
+In [8]: p2 = p.to_ros()
+
+In [9]: print p2
+position:
+  x: 42.0
+  y: 0.0
+  z: 0.0
+orientation:
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  w: 24.0
+
+In [10]: p2.x = 1000
+---------------------------------------------------------------------------
+AttributeError                            Traceback (most recent call last)
+
+AttributeError: 'Pose' object has no attribute 'x'
+
+In [11]: p2.position.x = 1000
+
+In [12]: p3 = p2.to_boost()
+
+In [13]: p3.position.x
+Out[13]: 1000.0
+
+In [14]: p3.position.y
+Out[14]: 0.0
