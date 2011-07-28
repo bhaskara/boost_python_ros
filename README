@@ -8,7 +8,7 @@ Example usage of the exported messages from Python (note rosh is basically an Ip
 
 $ rosh
 
-In [1]: rlm('boost_python_ros')
+In [1]: roslib.load_manifest('boost_python_ros')
 
 In [2]: import geometry_msgs_boost as gmb                                                                                                                            
 ~/dev/world_model/boost_python_ros/munged/std_msgs_boost.py:5: RuntimeWarning: to-Python converter for std::vector<signed char, std::allocator<signed char> > already regis
