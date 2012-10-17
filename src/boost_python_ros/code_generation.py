@@ -77,8 +77,12 @@ def generate_export_function(spec, s):
 
 
 def generate_equality_forward_declarations(spec, s):
+    already_seen = set()
     for f in spec.parsed_fields():
         if f.is_array and not f.is_builtin:
+            if f.base_type in already_seen:
+                continue
+            already_seen.add(f.base_type)
             m = re.match('(\w+)/', f.base_type)
             pkg = m.group(1)
             s.write("namespace {0}".format(pkg))
